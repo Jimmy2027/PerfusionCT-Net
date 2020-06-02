@@ -2,7 +2,8 @@ import numpy as np
 import torchsample.transforms as ts
 # import torchvision.transforms as tv
 from torchio.transforms import Interpolation
-from .imageTransformations import RandomElasticTransform, RandomAffineTransform, RandomNoiseTransform, RandomFlipTransform
+from .imageTransformations import RandomElasticTransform, RandomAffineTransform, RandomNoiseTransform, \
+    RandomFlipTransform
 from pprint import pprint
 
 
@@ -32,7 +33,8 @@ class Transformations:
 
     def get_transformation(self):
         return {
-            'gsd_pCT': self.get_gsd_pCT_transformer()
+            'gsd_pCT': self.get_gsd_pCT_transformer(),
+            'mlebe': self.get_gsd_pCT_transformer()
         }[self.name]
 
     def print(self):
@@ -74,14 +76,15 @@ class Transformations:
             # RandomFlipTransform(axes=(0), p=self.random_flip_prob, seed=seed, max_output_channels=self.max_output_channels),
             # RandomElasticTransform(seed=seed, p=1, image_interpolation=Interpolation.BSPLINE, max_displacement=self.max_deform,
             #                        max_output_channels=self.max_output_channels),
-            RandomAffineTransform(scales = self.scale_val, degrees = (self.rotate_val), isotropic = True, default_pad_value = 0,
-                        image_interpolation = Interpolation.BSPLINE, seed=seed, p=self.random_affine_prob, max_output_channels=self.max_output_channels),
+            RandomAffineTransform(scales=self.scale_val, degrees=(self.rotate_val), isotropic=True, default_pad_value=0,
+                                  image_interpolation=Interpolation.BSPLINE, seed=seed, p=self.random_affine_prob,
+                                  max_output_channels=self.max_output_channels),
             # RandomNoiseTransform(p=0.5, seed=seed, max_output_channels=self.max_output_channels),
             # Todo Random Affine doesn't support channels --> try newer version of torchsample or torchvision
             # ts.RandomAffine(rotation_range=self.rotate_val, translation_range=self.shift_val,
             #                 zoom_range=self.scale_val, interp=('bilinear', 'nearest')),
             ts.ChannelsFirst(),
-            #ts.NormalizeMedicPercentile(norm_flag=(True, False)),
+            # ts.NormalizeMedicPercentile(norm_flag=(True, False)),
             # Todo apply channel wise normalisation
             ts.NormalizeMedic(norm_flag=(True, False)),
             # Todo fork torchsample and fix the Random Crop bug

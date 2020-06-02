@@ -23,14 +23,14 @@ def train(arguments):
     arch_type = train_opts.arch_type
 
     # Setup Dataset and Augmentation
-    ds_class = get_dataset(arch_type)
-    ds_path = get_dataset_path(arch_type, json_opts.data_path)
-    ds_transform = get_dataset_transformation(arch_type, opts=json_opts.augmentation, max_output_channels=json_opts.model.output_nc)
+    ds_class = get_dataset('mlebe_dataset')
+    ds_path = json_opts.data.data_dir
+    ds_transform = get_dataset_transformation('mlebe', opts=json_opts.augmentation, max_output_channels=json_opts.model.output_nc)
 
     # Setup channels
     channels = json_opts.data_opts.channels
     if len(channels) != json_opts.model.input_nc \
-            or len(channels) != getattr(json_opts.augmentation, arch_type).scale_size[-1]:
+            or len(channels) != getattr(json_opts.augmentation, 'mlebe').scale_size[-1]:
         raise Exception('Number of data channels must match number of model channels, and patch and scale size dimensions')
 
     # Setup the NN Model
