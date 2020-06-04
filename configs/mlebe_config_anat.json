@@ -6,7 +6,9 @@
     "lr_policy": "step",
     "lr_decay_iters": 250,
     "batchSize": 2,
-    "preloadData": false
+    "preloadData": false,
+    "early_stopping_patience": 10
+
   },
   "visualisation":{
     "display_port": 8097,
@@ -24,8 +26,11 @@
   },
   "data": {
     "studies": ["drlfom", "mgtdbs", "opfvta", "ztau", "hendrik_nvcz", "irsabi_dargcc"],
+    "excluded_from_training": ["irsabi"],
+    "slice_view": "coronal",
     "data_dir" : "/mnt/data/hendrik/mlebe_data/",
-    "template_dir": "/usr/share/mouse-brain-atlases/"
+    "template_dir": "/usr/share/mouse-brain-atlases/",
+    "data_type": "anat"
   },
   "data_opts":{
     "channels": [0]
@@ -59,7 +64,7 @@
     "gpu_ids": [0],
     "isTrain": true,
     "checkpoints_dir": "./checkpoints",
-    "experiment_name": "with_augmentations",
+    "experiment_name": "with_augmentations_anat",
     "criterion": "dice_loss"
   }
 }

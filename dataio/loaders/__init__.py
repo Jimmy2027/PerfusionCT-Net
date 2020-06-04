@@ -1,4 +1,3 @@
-from dataio.loaders.geneva_stroke_dataset_pCT import GenevaStrokeDataset_pCT
 from dataio.loaders.mlebe_loader import mlebe_dataset
 
 def get_dataset(name):

@@ -65,7 +65,7 @@ class FeedForwardSegmentation(BaseModel):
             # If it's a 5D array and 2D model then (B x C x H x W x Z) -> (BZ x C x H x W)
             bs = _input.size()
             if (self.tensor_dim == '2D') and (len(bs) > 4):
-                _input = _input.permute(0,4,1,2,3).contiguous().view(bs[0]*bs[4], bs[1], bs[2], bs[3])
+                _input = _input.permute(0, 4, 1, 2, 3).contiguous().view(bs[0] * bs[4], bs[1], bs[2], bs[3])
 
             # Define that it's a cuda array
             if idx == 0:
@@ -82,9 +82,10 @@ class FeedForwardSegmentation(BaseModel):
             with torch.no_grad():
                 self.prediction = self.net(Variable(self.input))
                 # Apply a softmax and return a segmentation map
-                if self.prediction.shape[1] > 1: # multiclass
+                if self.prediction.shape[1] > 1:  # multiclass
                     self.logits = self.net.apply_argmax_softmax(self.prediction, dim=1)
-                    self.pred_seg = self.logits.data.max(1)[1].unsqueeze(1) # give each voxel the class index with max proba
+                    self.pred_seg = self.logits.data.max(1)[1].unsqueeze(
+                        1)  # give each voxel the class index with max proba
                 else:
                     self.logits = self.net.apply_argmax_softmax(self.prediction, dim=None)
                     self.pred_seg = (self.logits > 0.5).float()
@@ -123,7 +124,8 @@ class FeedForwardSegmentation(BaseModel):
         self.loss_S = self.criterion(self.prediction, self.target)
 
     def get_segmentation_stats(self):
-        self.seg_scores, self.class_dice_score, self.overall_dice_score, self.roc_auc_score = segmentation_stats(self.prediction, self.target)
+        self.seg_scores, self.class_dice_score, self.overall_dice_score, self.roc_auc_score = segmentation_stats(
+            self.prediction, self.target)
         seg_stats = [('Overall_Acc', self.seg_scores['overall_acc']), ('Mean_IOU', self.seg_scores['mean_iou']),
                      ('Overall_Dice', self.overall_dice_score), ('ROC_AUC', self.roc_auc_score)]
         for class_id in range(self.class_dice_score.size):
@@ -142,6 +144,7 @@ class FeedForwardSegmentation(BaseModel):
 
     def get_current_volumes(self):
         def to_volume(a): return a.cpu().float().detach().numpy()
+
         output = self.prediction if self.pred_seg is None else self.pred_seg
         return OrderedDict([('output', to_volume(output)),
                             ('input', to_volume(self.input)),
@@ -152,7 +155,7 @@ class FeedForwardSegmentation(BaseModel):
         return feature_extractor.forward(Variable(self.input))
 
     # returns the fp/bp times of the model
-    def get_fp_bp_time (self, size=None):
+    def get_fp_bp_time(self, size=None):
         if size is None:
             size = (1, 1, 160, 160, 96)
 
@@ -161,7 +164,7 @@ class FeedForwardSegmentation(BaseModel):
         fp, bp = benchmark_fp_bp_time(self.net, inp_array, out_array)
 
         bsize = size[0]
-        return fp/float(bsize), bp/float(bsize)
+        return fp / float(bsize), bp / float(bsize)
 
-    def save(self, epoch_label):
-        self.save_network(self.net, 'S', epoch_label, self.gpu_ids)
+    def save(self, network_label, epoch_label):
+        self.save_network(self.net, network_label, epoch_label, self.gpu_ids)
