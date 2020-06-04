@@ -24,6 +24,7 @@ class Transformations:
         self.random_flip_prob = 0.0
         self.random_affine_prob = 0.0
         self.random_elastic_prob = 0.0
+        self.random_noise_prob = 0.0
 
         # Divisibility factor for testing
         self.division_factor = (16, 16, 1)
@@ -71,18 +72,22 @@ class Transformations:
             ts.ToTensor(),
             ts.Pad(size=self.scale_size),
             ts.TypeCast(['float', 'float']),
-            # ts.RandomFlip(h=True, v=True, p=self.random_flip_prob),
-            # RandomElasticTransform(seed=seed, max_output_channels=self.max_output_channels),
-            # RandomFlipTransform(axes=(0), p=self.random_flip_prob, seed=seed, max_output_channels=self.max_output_channels),
-            # RandomElasticTransform(seed=seed, p=1, image_interpolation=Interpolation.BSPLINE, max_displacement=self.max_deform,
-            #                        max_output_channels=self.max_output_channels),
-            RandomAffineTransform(scales=self.scale_val, degrees=(self.rotate_val), isotropic=True, default_pad_value=0,
-                                  image_interpolation=Interpolation.BSPLINE, seed=seed, p=self.random_affine_prob,
-                                  max_output_channels=self.max_output_channels),
-            # RandomNoiseTransform(p=0.5, seed=seed, max_output_channels=self.max_output_channels),
+
+            RandomFlipTransform(axes=(0), p=self.random_flip_prob, seed=seed,
+                                max_output_channels=self.max_output_channels),
+            RandomElasticTransform(seed=seed, p=self.random_elastic_prob, image_interpolation=Interpolation.BSPLINE,
+                                   max_displacement=self.max_deform,
+                                   max_output_channels=self.max_output_channels),
+
+            # RandomAffineTransform(scales=self.scale_val, degrees=(self.rotate_val), isotropic=True, default_pad_value=0,
+            #                       image_interpolation=Interpolation.BSPLINE, seed=seed, p=self.random_affine_prob,
+            #                       max_output_channels=self.max_output_channels),
+
+            RandomNoiseTransform(p=self.random_noise_prob, seed=seed, max_output_channels=self.max_output_channels),
+
             # Todo Random Affine doesn't support channels --> try newer version of torchsample or torchvision
-            # ts.RandomAffine(rotation_range=self.rotate_val, translation_range=self.shift_val,
-            #                 zoom_range=self.scale_val, interp=('bilinear', 'nearest')),
+            ts.RandomAffine(rotation_range=self.rotate_val, translation_range=self.shift_val,
+                            zoom_range=self.scale_val, interp='nearest'),
             ts.ChannelsFirst(),
             # ts.NormalizeMedicPercentile(norm_flag=(True, False)),
             # Todo apply channel wise normalisation

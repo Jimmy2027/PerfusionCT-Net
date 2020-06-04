@@ -7,17 +7,48 @@ from torch.utils.data import Dataset
 from mlebe.training.utils import data_loader as dl
 from mlebe.training.utils.general import preprocess
 from dataio.loaders.utils import validate_images
+import torch.utils.data as data
+import numpy as np
+import datetime
+from sklearn.model_selection import train_test_split
+from .utils import validate_images
 
 
 class mlebe_dataset(Dataset):
 
-    def __init__(self, data_selection, template_dir, data_dir, studies, split, transform=None, preload_data=False,
-                 split_seed=42, train_size=0.7, test_size=0.15, valid_size=0.15,
-                 channels=[0, 1, 2, 3]):
+    def __init__(self, template_dir, data_dir, studies, split, transform=None,
+                 split_seed=42, train_size=0.7, test_size=0.15, valid_size=0.15):
+        """
+        if train_size = None, no splitting of the data is done
+        """
         super(mlebe_dataset, self).__init__()
-        self.data_selection = self.make_dataselection(self, data_dir, studies)
+        self.data_selection = self.make_dataselection(data_dir, studies)
         self.transform = transform
         self.template_dir = template_dir
+        self.split = split
+
+        if train_size:
+            test_valid_size = test_size + valid_size
+
+            train_selection, test_val_selection = train_test_split(self.data_selection, train_size=train_size,
+                                                                   test_size=test_valid_size,
+                                                                   random_state=split_seed)
+            test_selection, validation_selection = train_test_split(test_val_selection,
+                                                                    train_size=test_size / test_valid_size,
+                                                                    test_size=valid_size / test_valid_size,
+                                                                    random_state=split_seed)
+
+            if split == 'train':
+                self.selection = train_selection
+            if split == 'test':
+                self.selection = test_selection
+            if split == 'validation':
+                self.selection = validation_selection
+
+        else:
+            self.selection = self.data_selection
+
+        self.ids = self.selection['uid'].to_list()
 
     def make_dataselection(self, data_dir, studies):
         data_selection = pd.DataFrame()
@@ -44,12 +75,18 @@ class mlebe_dataset(Dataset):
                                                  'path'])])
         return data_selection
 
+    def get_ids(self, indices):
+        return [self.ids[index] for index in indices]
+
     def __len__(self):
-        return len(self.data_selection)
+        return len(self.selection)
 
     def __getitem__(self, index):
-        img = nib.load(self.data_selection.iloc[index]['path']).get_fdata()
-        target = dl.load_mask(self.template_dir).get_fdata()
+        # update the seed to avoid workers sample the same augmentation parameters
+        np.random.seed(datetime.datetime.now().second + datetime.datetime.now().microsecond)
+
+        img = nib.load(self.selection.iloc[index]['path']).get_data()
+        target = dl.load_mask(self.template_dir).get_data()
 
         img = preprocess(img, (128, 128), 'coronal')
         target = preprocess(target, (128, 128), 'coronal')

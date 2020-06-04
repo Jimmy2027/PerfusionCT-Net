@@ -57,10 +57,11 @@
     "l2_reg_weight": 1e-6,
     "feature_scale": 4,
     "gpu_ids": [0],
-    "isTrain": true,
+    "isTrain": false,
     "checkpoints_dir": "./checkpoints",
-    "experiment_name": "with_augmentations",
-    "criterion": "dice_loss"
+    "experiment_name": "test",
+    "criterion": "dice_loss",
+    "path_pre_trained_model": "checkpoints/test/120_net_S.pth"
   }
 }
 
