@@ -1,5 +1,3 @@
-# import mlebe.training.utils.scoring_utils as su
-# from mlebe.training import unet
 import os
 
 import numpy as np
@@ -19,6 +17,7 @@ json_opts = json_file_to_pyobj('configs/load_pretrained_mlebe_config.json')
 data_dir = json_opts.data.data_dir
 model_path = 'checkpoints/test/120_net_S.pth'
 template_dir = '/usr/share/mouse-brain-atlases/'
+
 model = get_model(json_opts.model)
 ds_class = get_dataset('mlebe_dataset')
 ds_path = json_opts.data.data_dir
@@ -28,9 +27,10 @@ train_opts = json_opts.training
 ds_transform = get_dataset_transformation('mlebe', opts=json_opts.augmentation,
                                           max_output_channels=json_opts.model.output_nc)
 
-test_dataset = ds_class(template_dir, ds_path, json_opts.data.studies, split='test', transform=ds_transform['valid'],
-                        train_size=split_opts.train_size, test_size=split_opts.test_size,
-                        valid_size=split_opts.validation_size, split_seed=split_opts.seed)
+test_dataset = ds_class(template_dir, ds_path, json_opts.data.studies, split='test', save_dir=None,
+                        data_type='anat', transform=ds_transform['valid'],
+train_size = split_opts.train_size, test_size = split_opts.test_size,
+                                                valid_size = split_opts.validation_size, split_seed = split_opts.seed)
 
 test_loader = DataLoader(dataset=test_dataset, num_workers=16, batch_size=train_opts.batchSize, shuffle=False)
 
@@ -72,6 +72,6 @@ for iteration, (images, labels, indices) in tqdm(enumerate(test_loader, 1), tota
         sitk.WriteImage(label_img, os.path.join(save_directory, '{}_lbl.nii.gz'.format(ids[batch_iter])))
         sitk.WriteImage(predi_img, os.path.join(save_directory, '{}_pred.nii.gz'.format(ids[batch_iter])))
 
-stat_logger.statlogger2csv(split='test', out_csv_name=os.path.join(save_directory, 'stats.csv'))
-for key, (mean_val, std_val) in stat_logger.get_errors(split='test').items():
-    print('-', key, ': \t{0:.3f}+-{1:.3f}'.format(mean_val, std_val), '-')
+        stat_logger.statlogger2csv(split='test', out_csv_name=os.path.join(save_directory, 'stats.csv'))
+        for key, (mean_val, std_val) in stat_logger.get_errors(split='test').items():
+            print('-', key, ': \t{0:.3f}+-{1:.3f}'.format(mean_val, std_val), '-')

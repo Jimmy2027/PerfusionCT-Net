@@ -133,13 +133,13 @@ def train(json_filename, network_debug=False):
         val_loss_log = pd.read_excel(os.path.join('checkpoints', json_opts.model.experiment_name, 'loss_log.xlsx'),
                                      sheet_name='validation').iloc[:, 1:]
         best_loss = val_loss_log['Seg_Loss'].min()
-        if (current_loss < best_loss) and (epoch % train_opts.save_epoch_freq == 0):
+        if (current_loss < best_loss or epoch < 100) and (epoch % train_opts.save_epoch_freq == 0):
             model.save(json_opts.model.model_type, epoch)
 
         # Update the model learning rate
         model.update_learning_rate()
 
-        if current_loss <= best_loss or epoch == 0:
+        if current_loss <= best_loss or epoch < 100:
             idx_early_stopping = 0
         else:
             print('current loss {} did not improve from {}'.format(current_loss, best_loss),

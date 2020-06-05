@@ -123,6 +123,7 @@ def mkdirs(paths):
 
 def mkdir(path):
     if not os.path.exists(path):
+        print('creating dir ', path)
         os.makedirs(path)
 
 

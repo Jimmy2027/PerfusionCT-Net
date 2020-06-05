@@ -30,6 +30,9 @@ class mlebe_dataset(Dataset):
             self.data_selection = self.make_dataselection_anat(data_dir, studies)
         elif data_type == 'func':
             self.data_selection = self.make_dataselection_func(data_dir, studies)
+        else:
+            assert False, 'Wrong data_type defined for {} dataset: {}, choose between anat and func'.format(split,
+                                                                                                            data_type)
 
         if train_size:
             test_valid_size = test_size + valid_size
@@ -63,7 +66,7 @@ class mlebe_dataset(Dataset):
     def make_dataselection_anat(self, data_dir, studies):
         data_selection = pd.DataFrame()
         for o in os.listdir(data_dir):
-            if (o in studies or not studies) and not o.startswith('.') and not o.endswith(
+            if (not studies or o in studies) and not o.startswith('.') and not o.endswith(
                     '.xz'):  # i.e. if o in studies or if studies empty
                 print(o)
                 data_set = o
@@ -83,7 +86,8 @@ class mlebe_dataset(Dataset):
                                         [[data_set, subject, session, acquisition, type, uid, path]],
                                         columns=['data_set', 'subject', 'session', 'acquisition', 'type', 'uid',
                                                  'path'])])
-        data_selection.to_csv(os.path.join(self.save_dir, self.split + '_dataset.csv'), index=False)
+        if self.save_dir:
+            data_selection.to_csv(os.path.join(self.save_dir, self.split + '_dataset.csv'), index=False)
         return data_selection
 
     def make_dataselection_func(self, data_dir, studies):
@@ -122,8 +126,8 @@ class mlebe_dataset(Dataset):
                                             [[data_set, subject, session, acquisition, type, uid, path]],
                                             columns=['data_set', 'subject', 'session', 'acquisition', 'type', 'uid',
                                                      'path'])])
-
-        data_selection.to_csv(os.path.join(self.save_dir, self.split + '_dataset.csv'), index=False)
+        if self.save_dir:
+            data_selection.to_csv(os.path.join(self.save_dir, self.split + '_dataset.csv'), index=False)
         return data_selection
 
     def get_ids(self, indices):
